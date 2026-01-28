@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,6 +7,7 @@ import {
     StatusBar,
     Alert,
     ScrollView,
+    TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -23,9 +24,33 @@ export const CardsScreen: React.FC = () => {
     const navigation = useNavigation();
     const [cards, setCards] = useState<Card[]>([]);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const loadCards = async () => {
+
+    const filteredCards = useMemo(() => {
+        if (!searchQuery.trim()) return cards;
+        const query = searchQuery.toLowerCase().trim();
+        return cards.filter(card =>
+            card.cardName.toLowerCase().includes(query) ||
+            card.cardNumber.toLowerCase().includes(query) ||
+            card.nameOnCard.toLowerCase().includes(query) ||
+            card.cardType.toLowerCase().includes(query)
+        );
+    }, [cards, searchQuery]);
+
+    // Initialize selectedCard when cards load or when search clears all results
+    useEffect(() => {
+        if (filteredCards.length > 0 && !selectedCard) {
+            setSelectedCard(filteredCards[0]);
+        } else if (filteredCards.length === 0) {
+            setSelectedCard(null);
+        }
+    }, [filteredCards.length, selectedCard]);
+
+
+    const loadCards = useCallback(async () => {
         try {
             const allCards = await getAllCards();
             setCards(allCards);
@@ -35,9 +60,9 @@ export const CardsScreen: React.FC = () => {
         } catch (error) {
             console.error('Error loading cards:', error);
         }
-    };
+    }, [selectedCard]);
 
-    const seedCards = async () => {
+    const seedCards = useCallback(async () => {
         const existing = await getAllCards();
         if (existing.length < 3) {
             await createCard(
@@ -87,13 +112,13 @@ export const CardsScreen: React.FC = () => {
             );
             loadCards();
         }
-    };
+    }, [loadCards]);
 
     useFocusEffect(
         useCallback(() => {
             loadCards();
             seedCards();
-        }, [])
+        }, [loadCards, seedCards])
     );
 
     const handleDeleteCard = (card: Card) => {
@@ -120,6 +145,12 @@ export const CardsScreen: React.FC = () => {
         );
     };
 
+    const handleEditCard = () => {
+        if (selectedCard) {
+            setIsEditModalVisible(true);
+        }
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={theme.colors.background} />
@@ -134,65 +165,68 @@ export const CardsScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <View style={styles.searchContainer}>
+                <View style={styles.searchInputWrapper}>
+                    <Icon name="search" size={20} color={theme.colors.textSecondary} style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search cards..."
+                        placeholderTextColor={theme.colors.textSecondary}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                            <Icon name="close" size={20} color={theme.colors.textSecondary} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.contentContainer} style={styles.content} showsVerticalScrollIndicator={false}>
                 <View style={styles.stackContainer}>
-                    {cards.length > 0 ? (
+                    {filteredCards.length > 0 ? (
                         <CardStack
-                            cards={cards}
+                            cards={filteredCards}
                             onTopCardChange={(card) => setSelectedCard(card)}
                         />
                     ) : (
                         <View style={styles.emptyState}>
                             <Icon name="credit-card" size={64} color={theme.colors.border} />
-                            <Text style={styles.emptyText}>No cards added yet</Text>
-                            <TouchableOpacity
-                                style={styles.emptyButton}
-                                onPress={() => setIsAddModalVisible(true)}
-                            >
-                                <Text style={styles.emptyButtonText}>ADD YOUR FIRST CARD</Text>
-                            </TouchableOpacity>
+                            <Text style={styles.emptyText}>
+                                {searchQuery ? 'No matching cards found' : 'No cards added yet'}
+                            </Text>
+                            {!searchQuery && (
+                                <TouchableOpacity
+                                    style={styles.emptyButton}
+                                    onPress={() => setIsAddModalVisible(true)}
+                                >
+                                    <Text style={styles.emptyButtonText}>ADD YOUR FIRST CARD</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     )}
                 </View>
-
-                {selectedCard && (
-                    <View style={styles.detailsContainer}>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Card Name</Text>
-                            <Text style={styles.detailValue}>{selectedCard.cardName}</Text>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Card Number</Text>
-                            <Text style={styles.detailValue}>{selectedCard.cardNumber}</Text>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Card Type</Text>
-                            <Text style={styles.detailValue}>{selectedCard.cardType}</Text>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Name on Card</Text>
-                            <Text style={styles.detailValue}>{selectedCard.nameOnCard}</Text>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Expiry Date</Text>
-                            <Text style={styles.detailValue}>{selectedCard.expiry}</Text>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>CVV</Text>
-                            <Text style={styles.detailValue}>{selectedCard.cvv}</Text>
-                        </View>
-
-                        <TouchableOpacity
-                            style={styles.deleteButton}
-                            onPress={() => handleDeleteCard(selectedCard)}
-                        >
-                            <Icon name="delete-outline" size={20} color={theme.colors.error} />
-                            <Text style={styles.deleteButtonText}>REMOVE CARD</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-                <View style={{ height: 40 }} />
             </ScrollView>
+
+            {selectedCard && (
+                <View style={styles.footerActions}>
+                    <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={handleEditCard}
+                    >
+                        <Icon name="edit" size={20} color={theme.colors.primary} />
+                        <Text style={styles.editButtonText}>EDIT CARD</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleDeleteCard(selectedCard)}
+                    >
+                        <Icon name="delete-outline" size={20} color={theme.colors.error} />
+                        <Text style={styles.deleteButtonText}>REMOVE CARD</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <AddCardModal
                 visible={isAddModalVisible}
@@ -201,6 +235,16 @@ export const CardsScreen: React.FC = () => {
                     setIsAddModalVisible(false);
                     loadCards();
                 }}
+            />
+
+            <AddCardModal
+                visible={isEditModalVisible}
+                onClose={() => setIsEditModalVisible(false)}
+                onSave={() => {
+                    setIsEditModalVisible(false);
+                    loadCards();
+                }}
+                editCard={selectedCard}
             />
         </SafeAreaView>
     );
@@ -233,14 +277,37 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
+    },
+    contentContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+    },
+    searchContainer: {
         paddingHorizontal: theme.spacing.lg,
-        paddingBottom: 40,
+        paddingBottom: theme.spacing.md,
+    },
+    searchInputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.colors.surface,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 50,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        color: theme.colors.text,
+        fontSize: 16,
     },
     stackContainer: {
         height: 480,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 10,
     },
     emptyState: {
         alignItems: 'center',
@@ -265,38 +332,40 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         letterSpacing: 1,
     },
-    detailsContainer: {
-        backgroundColor: theme.colors.cardBackground,
-        borderRadius: 16,
-        padding: 24,
-        marginTop: 20,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-    },
-    detailRow: {
+    footerActions: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-        paddingBottom: 8,
+        backgroundColor: theme.colors.background,
+        padding: theme.spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: theme.colors.border,
+        gap: 12,
     },
-    detailLabel: {
-        color: theme.colors.textSecondary,
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    detailValue: {
-        color: theme.colors.text,
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    deleteButton: {
+    editButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 10,
         padding: 12,
+        backgroundColor: theme.colors.surface,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: theme.colors.primary,
+    },
+    editButtonText: {
+        color: theme.colors.primary,
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginLeft: 8,
+        letterSpacing: 1,
+    },
+    deleteButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        backgroundColor: 'rgba(255, 51, 102, 0.1)',
+        borderRadius: 12,
     },
     deleteButtonText: {
         color: theme.colors.error,

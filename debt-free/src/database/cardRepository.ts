@@ -28,6 +28,23 @@ export const createCard = async (
     return results.insertId;
 };
 
+export const updateCard = async (
+    id: number,
+    cardName: string,
+    cardNumber: string,
+    cardType: CardType,
+    nameOnCard: string,
+    expiry: string,
+    cvv: string,
+    color: string,
+): Promise<void> => {
+    const db = getDatabase();
+    await db.executeSql(
+        'UPDATE Cards SET cardName = ?, cardNumber = ?, cardType = ?, nameOnCard = ?, expiry = ?, cvv = ?, color = ? WHERE id = ?',
+        [cardName, cardNumber, cardType, nameOnCard, expiry, cvv, color, id],
+    );
+};
+
 export const deleteCard = async (id: number): Promise<void> => {
     const db = getDatabase();
     await db.executeSql('DELETE FROM Cards WHERE id = ?', [id]);

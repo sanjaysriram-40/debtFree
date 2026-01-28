@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { theme } from '../styles/theme';
 import { Card, CardType } from '../types/types';
+import { copyToClipboard } from '../utils/clipboard';
+import { TouchableOpacity } from 'react-native';
 
 interface CreditCardProps {
     card: Card;
@@ -35,32 +37,52 @@ export const CreditCard: React.FC<CreditCardProps> = ({ card }) => {
     return (
         <View style={[styles.card, { backgroundColor: card.color || theme.colors.cardBackground }]}>
             <View style={styles.header}>
-                <View>
+                <View style={styles.headerInfo}>
                     <Text style={styles.bankLabel}>DEBTFREE BANK</Text>
-                    <Text style={styles.cardName}>{card.cardName.toUpperCase()}</Text>
+                    <TouchableOpacity
+                        style={styles.cardNameContainer}
+                        onPress={() => copyToClipboard(card.cardName, 'Card Name')}
+                    >
+                        <Text style={styles.cardName}>{card.cardName.toUpperCase()}</Text>
+                    </TouchableOpacity>
                 </View>
                 <Icon name="credit-card" size={32} color="rgba(255, 255, 255, 0.8)" />
             </View>
 
             <View style={styles.body}>
                 <View style={styles.horizontalDetails}>
-                    <View style={styles.numberContainer}>
-                        <Text style={styles.cardNumberRow}>
-                            {card.cardNumber ? card.cardNumber.split(' ').slice(0, 2).join(' ') : '**** ****'}
-                        </Text>
-                        <Text style={styles.cardNumberRow}>
-                            {card.cardNumber ? card.cardNumber.split(' ').slice(2, 4).join(' ') : '**** ****'}
-                        </Text>
-                    </View>
+                    <TouchableOpacity
+                        style={styles.numberContainer}
+                        onPress={() => copyToClipboard(card.cardNumber, 'Card Number')}
+                    >
+                        <View>
+                            <Text style={styles.cardNumberRow}>
+                                {card.cardNumber ? card.cardNumber.split(' ').slice(0, 2).join(' ') : '**** ****'}
+                            </Text>
+                            <Text style={styles.cardNumberRow}>
+                                {card.cardNumber ? card.cardNumber.split(' ').slice(2, 4).join(' ') : '**** ****'}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
                     <View style={styles.horizontalExpiryCvv}>
-                        <View style={styles.horizontalDetailItem}>
+                        <TouchableOpacity
+                            style={styles.horizontalDetailItem}
+                            onPress={() => copyToClipboard(card.expiry, 'Expiry Date')}
+                        >
                             <Text style={styles.horizontalLabel}>EXP</Text>
-                            <Text style={styles.horizontalValue}>{card.expiry}</Text>
-                        </View>
-                        <View style={styles.horizontalDetailItem}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.horizontalValue}>{card.expiry}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.horizontalDetailItem}
+                            onPress={() => copyToClipboard(card.cvv, 'CVV')}
+                        >
                             <Text style={styles.horizontalLabel}>CVV</Text>
-                            <Text style={styles.horizontalValue}>{card.cvv}</Text>
-                        </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.horizontalValue}>{card.cvv}</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
@@ -69,9 +91,14 @@ export const CreditCard: React.FC<CreditCardProps> = ({ card }) => {
                 <View style={styles.footerRow}>
                     <View style={{ flex: 1 }}>
                         <Text style={styles.label}>CARD HOLDER</Text>
-                        <Text style={styles.value} numberOfLines={1} ellipsizeMode="tail">
-                            {card.nameOnCard.toUpperCase()}
-                        </Text>
+                        <TouchableOpacity
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                            onPress={() => copyToClipboard(card.nameOnCard, 'Name on Card')}
+                        >
+                            <Text style={styles.value} numberOfLines={1} ellipsizeMode="tail">
+                                {card.nameOnCard.toUpperCase()}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                     <View style={styles.networkContainer}>
                         {renderCardTypeIcon(card.cardType)}
@@ -105,7 +132,14 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
         letterSpacing: 2,
+    },
+    cardNameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginTop: 2,
+    },
+    headerInfo: {
+        flex: 1,
     },
     bankLabel: {
         color: 'rgba(255, 255, 255, 0.6)',
@@ -123,6 +157,8 @@ const styles = StyleSheet.create({
     },
     numberContainer: {
         marginBottom: 20,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
     },
     cardNumberRow: {
         color: '#FFFFFF',

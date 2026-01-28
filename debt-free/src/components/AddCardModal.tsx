@@ -10,13 +10,14 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { theme } from '../styles/theme';
-import { CardType } from '../types/types';
-import { createCard } from '../database/cardRepository';
+import { Card, CardType } from '../types/types';
+import { createCard, updateCard } from '../database/cardRepository';
 
 interface AddCardModalProps {
     visible: boolean;
     onClose: () => void;
     onSave: () => void;
+    editCard?: Card | null;
 }
 
 const CARD_TYPES: CardType[] = ['VISA', 'MASTERCARD', 'RUPAY'];
@@ -33,6 +34,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     visible,
     onClose,
     onSave,
+    editCard = null,
 }) => {
     const [cardName, setCardName] = useState('');
     const [cardNumber, setCardNumber] = useState('');
@@ -42,6 +44,21 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     const [cvv, setCvv] = useState('');
     const [color, setColor] = useState(CARD_COLORS[0]);
     const [error, setError] = useState<string | null>(null);
+
+    // Pre-fill form when editing
+    React.useEffect(() => {
+        if (editCard) {
+            setCardName(editCard.cardName);
+            setCardNumber(editCard.cardNumber);
+            setCardType(editCard.cardType);
+            setNameOnCard(editCard.nameOnCard);
+            setExpiry(editCard.expiry);
+            setCvv(editCard.cvv);
+            setColor(editCard.color);
+        } else {
+            resetForm();
+        }
+    }, [editCard, visible]);
 
     const handleCardNumberChange = (text: string) => {
         // Remove all non-digits
@@ -69,15 +86,30 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
         }
 
         try {
-            await createCard(
-                cardName.trim(),
-                cardNumber.trim(),
-                cardType,
-                nameOnCard.trim(),
-                expiry.trim(),
-                cvv.trim(),
-                color
-            );
+            if (editCard) {
+                // Update existing card
+                await updateCard(
+                    editCard.id,
+                    cardName.trim(),
+                    cardNumber.trim(),
+                    cardType,
+                    nameOnCard.trim(),
+                    expiry.trim(),
+                    cvv.trim(),
+                    color
+                );
+            } else {
+                // Create new card
+                await createCard(
+                    cardName.trim(),
+                    cardNumber.trim(),
+                    cardType,
+                    nameOnCard.trim(),
+                    expiry.trim(),
+                    cvv.trim(),
+                    color
+                );
+            }
             resetForm();
             onSave();
         } catch (err) {
@@ -106,7 +138,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContainer}>
                     <View style={styles.header}>
-                        <Text style={styles.title}>ADD NEW CARD</Text>
+                        <Text style={styles.title}>{editCard ? 'EDIT CARD' : 'ADD NEW CARD'}</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                             <Icon name="close" size={24} color={theme.colors.text} />
                         </TouchableOpacity>
@@ -215,7 +247,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
                         {error && <Text style={styles.errorText}>{error}</Text>}
 
                         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                            <Text style={styles.saveButtonText}>SAVE CARD</Text>
+                            <Text style={styles.saveButtonText}>{editCard ? 'UPDATE CARD' : 'SAVE CARD'}</Text>
                         </TouchableOpacity>
                         <View style={{ height: 40 }} />
                     </ScrollView>

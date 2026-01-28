@@ -42,7 +42,7 @@ const PersonDetailScreen: React.FC<PersonDetailScreenProps> = ({
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState<TransactionHistory[]>([]);
 
-    const loadTransactions = async () => {
+    const loadTransactions = useCallback(async () => {
         try {
             const txns = await getTransactionsByPerson(person.id);
             setTransactions(txns);
@@ -50,12 +50,12 @@ const PersonDetailScreen: React.FC<PersonDetailScreenProps> = ({
             console.error('Error loading transactions:', error);
             Alert.alert('Error', 'Failed to load transactions');
         }
-    };
+    }, [person.id]);
 
     useFocusEffect(
         useCallback(() => {
             loadTransactions();
-        }, [person.id, loadTransactions]),
+        }, [loadTransactions]),
     );
 
     const balance = calculatePersonBalance(person, transactions);
