@@ -13,7 +13,7 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { theme } from '../styles/theme';
 import { TransactionDirection } from '../types/types';
-import { createTransaction, updateTransaction } from '../database/transactionRepository';
+import FirebaseService from '../services/FirebaseService';
 
 type AddTransactionScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -64,7 +64,7 @@ const AddTransactionScreen: React.FC<AddTransactionScreenProps> = ({
 
         try {
             if (isEditing && transaction) {
-                await updateTransaction(
+                await FirebaseService.updateTransaction(
                     transaction.id,
                     amountNum,
                     direction,
@@ -75,7 +75,7 @@ const AddTransactionScreen: React.FC<AddTransactionScreenProps> = ({
                     { text: 'OK', onPress: () => navigation.goBack() },
                 ]);
             } else {
-                await createTransaction(
+                await FirebaseService.addTransaction(
                     person.id,
                     amountNum,
                     direction,

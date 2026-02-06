@@ -20,6 +20,8 @@ import { calculatePersonBalance, calculateGlobalBalance } from '../utils/balance
 import { PersonListItem } from '../components/PersonListItem';
 import { AddPersonModal } from '../components/AddPersonModal';
 import { formatCurrency } from '../utils/formatters';
+import { BrutalButton } from '../components/BrutalButton';
+import { BrutalCard } from '../components/BrutalCard';
 
 type DashboardScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -91,11 +93,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
 
                 {/* Global Status Banner */}
                 <View style={styles.statusContainer}>
-                    <View
-                        style={[
-                            styles.globalStatus,
-                            { borderColor: globalBalance.globalNet >= 0 ? theme.colors.receive : theme.colors.debt },
-                        ]}>
+                    <BrutalCard color="white" shadowSize="lg" style={styles.globalStatus}>
                         <Text style={styles.statusLabel}>NET BALANCE</Text>
                         <Text style={[
                             styles.globalStatusText,
@@ -104,25 +102,25 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
                             {formatCurrency(Math.abs(globalBalance.globalNet))}
                         </Text>
                         <Text style={styles.statusMessage}>{globalBalance.message.toUpperCase()}</Text>
-                    </View>
+                    </BrutalCard>
                 </View>
 
                 {/* Summary Cards */}
                 <View style={styles.summaryContainer}>
-                    <View style={styles.summaryCard}>
+                    <BrutalCard color="lime" shadowSize="md" style={styles.summaryCard}>
                         <View style={[styles.indicator, { backgroundColor: theme.colors.receive }]} />
                         <Text style={styles.summaryLabel}>YOU LENT</Text>
                         <Text style={styles.summaryAmount}>
                             {formatCurrency(globalBalance.totalLent)}
                         </Text>
-                    </View>
-                    <View style={styles.summaryCard}>
+                    </BrutalCard>
+                    <BrutalCard color="white" shadowSize="md" style={styles.summaryCard}>
                         <View style={[styles.indicator, { backgroundColor: theme.colors.debt }]} />
                         <Text style={styles.summaryLabel}>BORROWED</Text>
                         <Text style={styles.summaryAmount}>
                             {formatCurrency(globalBalance.totalBorrowed)}
                         </Text>
-                    </View>
+                    </BrutalCard>
                 </View>
 
                 {/* People List Section */}
@@ -155,11 +153,15 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
                 />
 
                 {/* FAB */}
-                <TouchableOpacity
+                <BrutalButton
+                    title="+"
+                    onPress={() => setIsAddPersonModalVisible(true)}
+                    variant="primary"
+                    size="lg"
+                    rounded="full"
                     style={styles.fab}
-                    onPress={() => setIsAddPersonModalVisible(true)}>
-                    <Icon name="add" size={32} color="#000000" />
-                </TouchableOpacity>
+                    textStyle={styles.fabText}
+                />
 
                 <AddPersonModal
                     visible={isAddPersonModalVisible}
@@ -210,17 +212,8 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.lg,
     },
     globalStatus: {
-        backgroundColor: theme.colors.cardBackground,
-        padding: theme.spacing.xl,
-        borderRadius: theme.borderRadius.lg,
-        borderWidth: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.5,
-        shadowRadius: 15,
     },
     statusLabel: {
         color: theme.colors.textSecondary,
@@ -249,11 +242,6 @@ const styles = StyleSheet.create({
     },
     summaryCard: {
         flex: 1,
-        backgroundColor: theme.colors.cardBackground,
-        padding: theme.spacing.lg,
-        borderRadius: theme.borderRadius.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
     },
     indicator: {
         width: 20,
@@ -324,15 +312,10 @@ const styles = StyleSheet.create({
         right: theme.spacing.xl,
         width: 64,
         height: 64,
-        borderRadius: 32,
-        backgroundColor: theme.colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 8,
-        shadowColor: theme.colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
+    },
+    fabText: {
+        fontSize: 32,
+        fontWeight: theme.fontWeight.black,
     },
 });
 

@@ -30,6 +30,6 @@ export const AmountDisplay: React.FC<AmountDisplayProps> = ({ amount, type }) =>
 const styles = StyleSheet.create({
     amount: {
         fontSize: theme.fontSize.lg,
-        fontWeight: '600',
+        fontWeight: theme.fontWeight.extrabold,
     },
 });

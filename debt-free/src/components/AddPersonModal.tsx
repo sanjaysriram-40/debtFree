@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { theme } from '../styles/theme';
-import { createPerson } from '../database/personRepository';
+import FirebaseService from '../services/FirebaseService';
 
 interface AddPersonModalProps {
     visible: boolean;
@@ -34,7 +34,7 @@ export const AddPersonModal: React.FC<AddPersonModalProps> = ({
         }
 
         try {
-            await createPerson(name.trim(), phone.trim() || undefined, notes.trim() || undefined);
+            await FirebaseService.addPerson(name.trim(), phone.trim() || undefined, notes.trim() || undefined);
             setName('');
             setPhone('');
             setNotes('');

@@ -14,9 +14,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { theme } from '../styles/theme';
 import { Card } from '../types/types';
-import { getAllCards, deleteCard, createCard } from '../database/cardRepository';
+import { getAllCards, createCard } from '../database/cardRepository';
 import { CardStack } from '../components/CardStack';
 import { AddCardModal } from '../components/AddCardModal';
+import FirebaseService from '../services/FirebaseService';
 
 import { useNavigation } from '@react-navigation/native';
 
@@ -131,7 +132,7 @@ export const CardsScreen: React.FC = () => {
                     text: 'Delete',
                     style: 'destructive',
                     onPress: async () => {
-                        await deleteCard(card.id);
+                        await FirebaseService.deleteCard(card.id);
                         const allCards = await getAllCards();
                         setCards(allCards);
                         if (allCards.length > 0) {

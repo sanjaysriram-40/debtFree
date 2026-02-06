@@ -18,8 +18,9 @@ import { Transaction, TransactionHistory } from '../types/types';
 import { TransactionListItem } from '../components/TransactionListItem';
 import { TransactionHistoryModal } from '../components/TransactionHistoryModal';
 import { calculatePersonBalance } from '../utils/balanceCalculator';
-import { getTransactionsByPerson, getTransactionHistory, deleteTransaction } from '../database/transactionRepository';
+import { getTransactionsByPerson, getTransactionHistory } from '../database/transactionRepository';
 import { formatCurrency } from '../utils/formatters';
+import FirebaseService from '../services/FirebaseService';
 
 type PersonDetailScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -100,7 +101,7 @@ const PersonDetailScreen: React.FC<PersonDetailScreenProps> = ({
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await deleteTransaction(transaction.id);
+                            await FirebaseService.deleteTransaction(transaction.id);
                             loadTransactions();
                         } catch (error) {
                             console.error('Error deleting transaction:', error);

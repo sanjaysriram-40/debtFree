@@ -11,7 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { theme } from '../styles/theme';
 import { Card, CardType } from '../types/types';
-import { createCard, updateCard } from '../database/cardRepository';
+import FirebaseService from '../services/FirebaseService';
 
 interface AddCardModalProps {
     visible: boolean;
@@ -88,7 +88,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
         try {
             if (editCard) {
                 // Update existing card
-                await updateCard(
+                await FirebaseService.updateCard(
                     editCard.id,
                     cardName.trim(),
                     cardNumber.trim(),
@@ -100,7 +100,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
                 );
             } else {
                 // Create new card
-                await createCard(
+                await FirebaseService.addCard(
                     cardName.trim(),
                     cardNumber.trim(),
                     cardType,

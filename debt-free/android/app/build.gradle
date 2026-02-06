@@ -119,3 +119,6 @@ dependencies {
 }
 
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+// Add Google Services plugin
+apply plugin: 'com.google.gms.google-services'
